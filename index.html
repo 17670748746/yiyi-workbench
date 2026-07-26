@@ -290,6 +290,16 @@
       <button class="btn-primary w-full" onclick="saveMood()">保存今日情绪</button>
     </div>
 
+    <div class="task-card mb-3">
+      <div class="text-sm font-semibold mb-3">⚖️ 今日体重记录</div>
+      <div class="flex items-end gap-3">
+        <input class="input" type="number" id="weightInput" placeholder="体重（kg）" step="0.1" min="30" max="200" style="margin-bottom:0; flex:1;">
+        <button class="btn-primary" onclick="saveWeight()" style="padding:12px 20px; white-space:nowrap;">记录</button>
+      </div>
+      <div class="text-xs mt-2" style="color: var(--text-2);" id="weightTip"></div>
+      <div id="weightHistory" class="mt-3"></div>
+    </div>
+
     <div class="task-card">
       <div class="text-sm font-semibold mb-3">最近 7 天打卡</div>
       <div id="healthHistory"></div>
@@ -355,7 +365,8 @@ const defaultData = {
   scripts: [],
   remix: [],
   review: [],
-  healthLogs: {}  // { '2026-07-26': { meds: {morning:true,...}, mood: 7, note: '...' } }
+  healthLogs: {},  // { '2026-07-26': { meds: {morning:true,...}, mood: 7, note: '...' } }
+  weightLogs: {},  // { '2026-07-26': 58.5, '2026-07-25': 59.0 }
 };
 
 function genId(){ return Math.random().toString(36).slice(2,10); }
@@ -510,15 +521,20 @@ function renderHealthPage(){
   // 历史
   const histEl = document.getElementById('healthHistory');
   const dates = Object.keys(data.healthLogs).sort().reverse().slice(0,7);
-  if(!dates.length){ histEl.innerHTML = `<div class="empty">还没有打卡记录</div>`; return; }
-  histEl.innerHTML = dates.map(d => {
-    const log = data.healthLogs[d];
-    const medsDone = Object.values(log.meds||{}).filter(Boolean).length;
-    return `<div class="flex justify-between text-xs py-1.5" style="border-bottom:1px solid var(--line);">
-      <span>${d}</span>
-      <span style="color:var(--text-2);">💊${medsDone}/3 · 心情${log.mood||'-'}</span>
-    </div>`;
-  }).join('');
+  if(!dates.length){ histEl.innerHTML = `<div class="empty">还没有打卡记录</div>`; }
+  else {
+    histEl.innerHTML = dates.map(d => {
+      const log = data.healthLogs[d];
+      const medsDone = Object.values(log.meds||{}).filter(Boolean).length;
+      return `<div class="flex justify-between text-xs py-1.5" style="border-bottom:1px solid var(--line);">
+        <span>${d}</span>
+        <span style="color:var(--text-2);">💊${medsDone}/3 · 心情${log.mood||'-'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // 体重渲染
+  renderWeightSection();
 }
 
 // ─────────── 交互 ───────────
@@ -699,6 +715,49 @@ function saveMood(){
   saveData();
   alert('已保存今日情绪 ✨');
   renderHealthPage();
+}
+
+// ─── 体重记录 ───
+function saveWeight(){
+  const el = document.getElementById('weightInput');
+  const w = parseFloat(el.value);
+  if(!w || w < 30 || w > 200){ alert('请输入有效体重（30-200 kg）'); return; }
+  const k = todayKey();
+  data.weightLogs[k] = w;
+  saveData();
+  el.value = '';
+  renderWeightSection();
+}
+
+function renderWeightSection(){
+  const keys = Object.keys(data.weightLogs).sort().reverse();
+  const tipEl = document.getElementById('weightTip');
+  const histEl = document.getElementById('weightHistory');
+
+  if(!keys.length){
+    tipEl.textContent = '记录每日体重，关注身体变化';
+    histEl.innerHTML = '';
+    return;
+  }
+
+  const latest = data.weightLogs[keys[0]];
+  if(keys.length >= 2){
+    const prev = data.weightLogs[keys[1]];
+    const diff = (latest - prev).toFixed(1);
+    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+    const color = Math.abs(diff) < 0.5 ? 'var(--text-2)' : diff > 0 ? 'var(--primary-dark)' : 'var(--accent)';
+    tipEl.innerHTML = `最新：<b>${latest} kg</b> · 较上次 <span style="color:${color}">${arrow} ${Math.abs(diff)} kg</span>`;
+  } else {
+    tipEl.innerHTML = `最新：<b>${latest} kg</b>`;
+  }
+
+  histEl.innerHTML = keys.slice(0,7).map(d => {
+    const w = data.weightLogs[d];
+    return `<div class="flex justify-between text-xs py-1.5" style="border-bottom:1px solid var(--line);">
+      <span>${d}</span>
+      <span style="font-weight:600;">${w} kg</span>
+    </div>`;
+  }).join('');
 }
 
 // ─── AI 文案生成 ───
