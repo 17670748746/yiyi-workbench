@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="依依的工作台">
-<meta name="theme-color" content="#B8825A">
+<meta name="theme-color" content="#C4877B">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
@@ -15,110 +15,153 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root{
-    --bg: #F4EFE6;
+    --bg: #FAF5F0;
     --card: #FFFFFF;
-    --primary: #B8825A;
-    --primary-light: #E8D9C4;
-    --text: #3A3A3A;
-    --text-2: #888888;
-    --line: #E8DFD0;
-    --accent: #7A9B6E;
+    --primary: #C4877B;
+    --primary-dark: #A66B60;
+    --primary-light: #F2DFD7;
+    --primary-soft: #FFF0EB;
+    --text: #4A3F3C;
+    --text-2: #A8998F;
+    --line: #F0E8E2;
+    --accent: #A8B99A;
+    --accent-light: #E8EFE3;
+    --rose: #D4A0A0;
+    --gold: #C9A96E;
   }
   *{ -webkit-tap-highlight-color: transparent; }
-  html,body{ background: #E8E2D5; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--text); }
+  html,body{ background: #F0E8E0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--text); }
   .phone{
     max-width: 480px; margin: 0 auto; min-height: 100vh;
     background: var(--bg);
-    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+    box-shadow: 0 0 60px rgba(180,140,130,0.12);
     position: relative; overflow-x: hidden;
   }
   .check{
-    width: 20px; height: 20px; border: 1.5px solid var(--primary-light);
-    border-radius: 5px; display: inline-flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all .2s; flex-shrink: 0;
+    width: 22px; height: 22px; border: 2px solid var(--primary-light);
+    border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .25s; flex-shrink: 0;
+    background: white;
   }
-  .check.done{ background: var(--primary); border-color: var(--primary); }
+  .check.done{ background: var(--primary); border-color: var(--primary); box-shadow: 0 2px 8px rgba(196,135,123,0.3); }
   .check.done::after{ content: '✓'; color: white; font-size: 13px; font-weight: 600; }
   .task-item{ transition: opacity .2s; }
   .task-item.done .task-text{ text-decoration: line-through; color: var(--text-2); }
   .nav-item{
-    padding: 14px 18px; border-radius: 10px; cursor: pointer;
-    color: var(--text); font-size: 15px; transition: all .15s;
+    padding: 14px 18px; border-radius: 12px; cursor: pointer;
+    color: var(--text); font-size: 15px; transition: all .2s;
     display: flex; align-items: center; gap: 12px;
   }
-  .nav-item:hover{ background: rgba(184,130,90,0.08); }
-  .nav-item.active{ background: var(--primary); color: white; }
+  .nav-item:hover{ background: var(--primary-soft); }
+  .nav-item.active{ background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 14px rgba(196,135,123,0.3); }
   .nav-icon{ font-size: 18px; }
-  .stat-card{ background: var(--card); border-radius: 14px; padding: 14px 12px; text-align: center; }
-  .stat-num{ font-size: 22px; font-weight: 700; color: var(--text); }
-  .stat-label{ font-size: 11px; color: var(--text-2); margin-top: 2px; }
-  .task-card{ background: var(--card); border-radius: 14px; padding: 14px 16px; }
-  .task-card + .task-card{ margin-top: 10px; }
+  .stat-card{ background: var(--card); border-radius: 16px; padding: 16px 10px; text-align: center; box-shadow: 0 2px 12px rgba(180,140,130,0.06); }
+  .stat-num{ font-size: 24px; font-weight: 700; color: var(--primary-dark); }
+  .stat-label{ font-size: 11px; color: var(--text-2); margin-top: 3px; letter-spacing: 0.5px; }
+  .task-card{ background: var(--card); border-radius: 16px; padding: 16px 18px; box-shadow: 0 2px 12px rgba(180,140,130,0.05); }
+  .task-card + .task-card{ margin-top: 12px; }
   .section-title{
-    font-size: 13px; font-weight: 600; color: var(--text-2);
-    margin: 18px 0 10px; letter-spacing: 0.5px;
+    font-size: 12px; font-weight: 700; color: var(--text-2);
+    margin: 20px 0 10px; letter-spacing: 1px; text-transform: uppercase;
   }
   .pill{
-    display: inline-block; padding: 2px 8px; border-radius: 10px;
-    font-size: 11px; background: var(--primary-light); color: var(--primary);
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; background: var(--primary-soft); color: var(--primary-dark);
+    font-weight: 500;
   }
-  .pill.green{ background: #E0EAD7; color: var(--accent); }
-  .pill.gray{ background: #EEE9DC; color: var(--text-2); }
+  .pill.green{ background: var(--accent-light); color: #6B8060; }
+  .pill.gray{ background: #F5F0EC; color: var(--text-2); }
   .btn-primary{
-    background: var(--primary); color: white; border: none;
-    padding: 10px 16px; border-radius: 10px; font-size: 14px; cursor: pointer;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white; border: none;
+    padding: 12px 20px; border-radius: 14px; font-size: 14px; cursor: pointer;
+    font-weight: 600; letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(196,135,123,0.25);
+    transition: all .2s;
   }
+  .btn-primary:active{ transform: scale(0.97); opacity: 0.9; }
   .btn-ghost{
-    background: transparent; color: var(--primary); border: 1px dashed var(--primary-light);
-    padding: 10px 16px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%;
-    margin-top: 10px;
+    background: transparent; color: var(--primary); border: 1.5px dashed var(--primary-light);
+    padding: 12px 20px; border-radius: 14px; font-size: 14px; cursor: pointer; width: 100%;
+    margin-top: 12px; font-weight: 500; transition: all .2s;
   }
+  .btn-ghost:active{ background: var(--primary-soft); }
   .drawer-mask{
-    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    position: fixed; inset: 0; background: rgba(74,63,60,0.35);
     opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 40;
+    backdrop-filter: blur(2px);
   }
   .drawer-mask.show{ opacity: 1; pointer-events: auto; }
   .drawer{
-    position: fixed; top: 0; left: 0; bottom: 0; width: 260px; max-width: 80%;
-    background: var(--bg); transform: translateX(-100%); transition: transform .25s;
-    z-index: 50; padding: 24px 16px;
+    position: fixed; top: 0; left: 0; bottom: 0; width: 270px; max-width: 82%;
+    background: linear-gradient(180deg, #FFF8F5 0%, #FAF5F0 100%);
+    transform: translateX(-100%); transition: transform .3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 50; padding: 28px 18px;
+    box-shadow: 4px 0 30px rgba(180,140,130,0.08);
   }
   .drawer.show{ transform: translateX(0); }
   .page{ display: none; padding: 0 16px 24px; }
-  .page.active{ display: block; }
-  .script-card{ background: var(--card); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
-  .script-card.done{ opacity: 0.6; }
+  .page.active{ display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+  .script-card{
+    background: var(--card); border-radius: 16px; padding: 16px 18px; margin-bottom: 10px;
+    cursor: pointer; box-shadow: 0 2px 12px rgba(180,140,130,0.05); transition: all .2s;
+  }
+  .script-card:active{ transform: scale(0.98); }
+  .script-card.done{ opacity: 0.55; }
   .script-card.done .script-title{ text-decoration: line-through; }
   .mood-btn{
-    width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--line);
-    background: white; cursor: pointer; font-size: 13px; transition: all .15s;
+    width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--line);
+    background: white; cursor: pointer; font-size: 13px; font-weight: 500;
+    transition: all .2s; color: var(--text-2);
   }
-  .mood-btn.active{ background: var(--primary); color: white; border-color: var(--primary); }
+  .mood-btn:hover{ border-color: var(--primary-light); }
+  .mood-btn.active{ background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border-color: transparent; box-shadow: 0 3px 12px rgba(196,135,123,0.3); transform: scale(1.08); }
   .empty{
-    text-align: center; padding: 40px 20px; color: var(--text-2); font-size: 13px;
+    text-align: center; padding: 44px 24px; color: var(--text-2); font-size: 13px;
+    line-height: 1.8;
   }
   .modal-mask{
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    position: fixed; inset: 0; background: rgba(74,63,60,0.45);
     display: none; align-items: center; justify-content: center; z-index: 60;
-    padding: 20px;
+    padding: 24px; backdrop-filter: blur(3px);
   }
   .modal-mask.show{ display: flex; }
   .modal{
-    background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px;
-    max-height: 80vh; overflow-y: auto;
+    background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px;
+    max-height: 80vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(180,140,130,0.15);
+    animation: modalIn .25s ease;
   }
+  @keyframes modalIn{ from{opacity:0;transform:scale(0.95) translateY(10px);} to{opacity:1;transform:scale(1) translateY(0);} }
   .input{
-    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
-    border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 10px;
-    font-family: inherit;
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--line);
+    border-radius: 12px; font-size: 14px; outline: none; margin-bottom: 12px;
+    font-family: inherit; background: #FAFAF8; transition: border .2s;
+    box-sizing: border-box;
   }
-  .input:focus{ border-color: var(--primary); }
+  .input:focus{ border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(196,135,123,0.08); }
   textarea.input{ min-height: 100px; resize: vertical; }
+  select.input{ appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A8998F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
   .progress-bar{
-    height: 6px; background: var(--primary-light); border-radius: 3px; overflow: hidden;
+    height: 8px; background: var(--primary-soft); border-radius: 4px; overflow: hidden;
   }
-  .progress-fill{ height: 100%; background: var(--primary); transition: width .3s; }
+  .progress-fill{
+    height: 100%; background: linear-gradient(90deg, var(--primary-light) 0%, var(--primary) 50%, var(--primary-dark) 100%);
+    transition: width .4s cubic-bezier(0.4,0,0.2,1); border-radius: 4px;
+  }
   ::-webkit-scrollbar{ width: 0; }
+  .med-btn{
+    padding: 14px 10px; border-radius: 14px; border: 2px solid var(--line);
+    background: white; cursor: pointer; font-size: 14px; font-weight: 600;
+    text-align: center; transition: all .2s; color: var(--text);
+    line-height: 1.5;
+  }
+  .med-btn:active{ transform: scale(0.95); }
+  .med-btn.done{
+    background: linear-gradient(135deg, var(--accent) 0%, #8FA885 100%);
+    color: white; border-color: transparent;
+    box-shadow: 0 3px 12px rgba(168,185,154,0.3);
+  }
 </style>
 </head>
 <body>
@@ -126,10 +169,10 @@
 <div class="phone">
 
   <!-- 顶部栏 -->
-  <header class="flex items-center justify-between px-4 py-3 sticky top-0 z-30" style="background: var(--bg);">
-    <button onclick="toggleDrawer()" class="text-xl" style="color: var(--text);">☰</button>
-    <h1 id="pageTitle" class="text-base font-semibold">每日计划</h1>
-    <button onclick="openAddTask()" class="text-2xl leading-none" style="color: var(--primary);">+</button>
+  <header class="flex items-center justify-between px-4 py-3 sticky top-0 z-30" style="background: rgba(250,245,240,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--primary-soft);">
+    <button onclick="toggleDrawer()" class="text-xl" style="color: var(--primary-dark);">☰</button>
+    <h1 id="pageTitle" class="text-base font-semibold" style="color: var(--text);">每日计划</h1>
+    <button onclick="openAddTask()" class="text-2xl leading-none font-light" style="color: var(--primary);">+</button>
   </header>
 
   <!-- 每日计划页 -->
@@ -143,7 +186,7 @@
     </div>
 
     <!-- 健康提醒条 -->
-    <div id="healthBanner" class="task-card" style="background: linear-gradient(135deg, #E0EAD7 0%, #D4E2C8 100%); border-left: 3px solid var(--accent); display:none;">
+    <div id="healthBanner" class="task-card" style="background: linear-gradient(135deg, #F2F0EC 0%, #F8F3ED 100%); border-left: 3px solid var(--primary); display:none;">
       <div class="flex items-center gap-2 text-sm" style="color: #4A6741;">
         <span>🌿</span>
         <span id="healthBannerText">记得照顾自己</span>
@@ -239,10 +282,10 @@
       <div id="healthHistory"></div>
     </div>
 
-    <div class="mt-4 task-card" style="background: #FFF8E8; border-left: 3px solid #D4A847;">
-      <div class="text-xs" style="color: #8B6F2A;">
-        🌱 <b>温馨提示</b><br>
-        情绪低落是真实的，不需要强迫自己"快点好起来"。按时吃药、规律作息、允许自己休息——都是在照顾自己。
+    <div class="mt-4 task-card" style="background: linear-gradient(135deg, #FFF8F5 0%, #FFF0EB 100%); border-left: 3px solid var(--primary-light);">
+      <div class="text-xs" style="color: var(--primary-dark); line-height: 1.8;">
+        🌸 <b>温馨提示</b><br>
+        情绪低落是真实的，不需要强迫自己「快点好起来」。按时吃药、规律作息、允许自己休息——都是在照顾自己。
       </div>
     </div>
   </section>
@@ -265,9 +308,9 @@
     <div class="nav-item" data-page="health" onclick="goPage('health','健康打卡')"><span class="nav-icon">🌿</span>健康打卡</div>
   </nav>
 
-  <div class="absolute bottom-6 left-4 right-4 text-xs" style="color: var(--text-2);">
+  <div class="absolute bottom-6 left-4 right-4 text-xs" style="color: var(--text-2); opacity: 0.7;">
     <div>数据保存在本地浏览器</div>
-    <button class="mt-2 underline" onclick="resetData()">重置全部数据</button>
+    <button class="mt-2 underline" style="color: var(--primary-dark);" onclick="resetData()">重置全部数据</button>
   </div>
 </aside>
 
@@ -441,9 +484,7 @@ function renderHealthPage(){
   document.querySelectorAll('.med-btn').forEach(btn => {
     const t = btn.dataset.time;
     const done = data.healthLogs[k].meds[t];
-    btn.style.background = done ? 'var(--accent)' : 'white';
-    btn.style.color = done ? 'white' : 'var(--text)';
-    btn.style.borderColor = done ? 'var(--accent)' : 'var(--line)';
+    btn.classList.toggle('done', done);
   });
 
   // 情绪按钮高亮
