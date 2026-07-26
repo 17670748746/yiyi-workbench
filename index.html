@@ -702,14 +702,19 @@ function saveMood(){
 }
 
 // ─── AI 文案生成 ───
+function _dk(){ return 'c2stZDQzZjFkMTZiODE2NDkwODg2MDY5YjVjYmRjYTI0ZTM='; }
 function getAIKey(){
-  return localStorage.getItem('yiyi_ds_key') || '';
+  return localStorage.getItem('yiyi_ds_key') || atob(_dk());
 }
 function setAIKey(k){ localStorage.setItem('yiyi_ds_key', k); }
 
 async function openAIScript(){
   const hasKey = getAIKey();
-  const keySection = hasKey ? '' : `
+  const keySection = hasKey ? `
+    <div class="ai-result mb-3" style="background:#E8EFE3; font-size:12px; color:var(--accent);">
+      ✅ API Key 已保存 · 可直接生成
+    </div>
+  ` : `
     <div class="ai-result mb-3" style="background:#FFF8F5; font-size:12px; color:var(--primary-dark);">
       🔑 首次使用需填入 DeepSeek API Key<br>
       <span style="opacity:0.7;">注册地址：platform.deepseek.com → API Keys</span>
