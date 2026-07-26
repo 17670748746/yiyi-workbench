@@ -457,7 +457,12 @@ function renderTopics(){
 function renderScripts(){
   const el = document.getElementById('list-scripts');
   el.innerHTML = data.scripts.map(s => `
-    <div class="script-card ${s.status==='已发'?'done':''}" onclick="openScriptDetail('${s.id}')">
+    <div class="script-card ${s.status==='已发'?'done':''}" data-script-id="${s.id}"
+      onclick="openScriptDetail('${s.id}')"
+      oncontextmenu="event.preventDefault(); openScriptMenu('${s.id}');"
+      ontouchstart="this._t=setTimeout(()=>openScriptMenu('${s.id}'),600);"
+      ontouchend="clearTimeout(this._t);"
+      ontouchmove="clearTimeout(this._t);">
       <div class="flex items-start justify-between gap-2">
         <div class="flex-1">
           <div class="script-title text-sm font-semibold">${escapeHtml(s.title)}</div>
@@ -637,15 +642,41 @@ function submitScript(){
 }
 function openScriptDetail(id){
   const s = data.scripts.find(x=>x.id===id);
-  const cycle = () => {
+  // 展开/收起逻辑
+  const card = document.querySelector(`[data-script-id="${id}"]`);
+  if(!card) return;
+  const isExpanded = card.classList.contains('expanded');
+  // 先收起所有其他卡片
+  document.querySelectorAll('.script-card.expanded').forEach(c => {
+    c.classList.remove('expanded');
+    const content = c.querySelector('.script-full');
+    if(content) content.style.display = 'none';
+  });
+  if(!isExpanded){
+    card.classList.add('expanded');
+    let content = card.querySelector('.script-full');
+    if(!content){
+      content = document.createElement('div');
+      content.className = 'script-full';
+      content.style.cssText = 'margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--text);';
+      content.textContent = s.content || '暂无内容';
+      card.appendChild(content);
+    }
+    content.style.display = 'block';
+  }
+}
+
+function openScriptMenu(id){
+  const s = data.scripts.find(x=>x.id===id);
+  const action = prompt(
+    `「${s.title}」\n\n1. 切换状态（当前：${s.status}）\n2. 删除这条文案\n\n输入数字 1 或 2：`
+  );
+  if(action === '1'){
     const order = ['草稿','拍摄中','已发'];
     s.status = order[(order.indexOf(s.status)+1) % order.length];
     saveData(); renderScripts();
-  };
-  if(confirm(`文案：「${s.title}」\n平台：${s.platform}\n状态：${s.status}\n\n【确定】切换状态\n【取消】关闭并删除`)){
-    cycle();
-  } else {
-    if(confirm('删除这条文案？')){
+  } else if(action === '2'){
+    if(confirm('确定删除「'+s.title+'」？')){
       data.scripts = data.scripts.filter(x=>x.id!==id);
       saveData(); renderScripts();
     }
