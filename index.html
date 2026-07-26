@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>依依的工作台</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="依依的工作台">
+<meta name="theme-color" content="#B8825A">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg: #F4EFE6;
+    --card: #FFFFFF;
+    --primary: #B8825A;
+    --primary-light: #E8D9C4;
+    --text: #3A3A3A;
+    --text-2: #888888;
+    --line: #E8DFD0;
+    --accent: #7A9B6E;
+  }
+  *{ -webkit-tap-highlight-color: transparent; }
+  html,body{ background: #E8E2D5; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--text); }
+  .phone{
+    max-width: 480px; margin: 0 auto; min-height: 100vh;
+    background: var(--bg);
+    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+    position: relative; overflow-x: hidden;
+  }
+  .check{
+    width: 20px; height: 20px; border: 1.5px solid var(--primary-light);
+    border-radius: 5px; display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s; flex-shrink: 0;
+  }
+  .check.done{ background: var(--primary); border-color: var(--primary); }
+  .check.done::after{ content: '✓'; color: white; font-size: 13px; font-weight: 600; }
+  .task-item{ transition: opacity .2s; }
+  .task-item.done .task-text{ text-decoration: line-through; color: var(--text-2); }
+  .nav-item{
+    padding: 14px 18px; border-radius: 10px; cursor: pointer;
+    color: var(--text); font-size: 15px; transition: all .15s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .nav-item:hover{ background: rgba(184,130,90,0.08); }
+  .nav-item.active{ background: var(--primary); color: white; }
+  .nav-icon{ font-size: 18px; }
+  .stat-card{ background: var(--card); border-radius: 14px; padding: 14px 12px; text-align: center; }
+  .stat-num{ font-size: 22px; font-weight: 700; color: var(--text); }
+  .stat-label{ font-size: 11px; color: var(--text-2); margin-top: 2px; }
+  .task-card{ background: var(--card); border-radius: 14px; padding: 14px 16px; }
+  .task-card + .task-card{ margin-top: 10px; }
+  .section-title{
+    font-size: 13px; font-weight: 600; color: var(--text-2);
+    margin: 18px 0 10px; letter-spacing: 0.5px;
+  }
+  .pill{
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; background: var(--primary-light); color: var(--primary);
+  }
+  .pill.green{ background: #E0EAD7; color: var(--accent); }
+  .pill.gray{ background: #EEE9DC; color: var(--text-2); }
+  .btn-primary{
+    background: var(--primary); color: white; border: none;
+    padding: 10px 16px; border-radius: 10px; font-size: 14px; cursor: pointer;
+  }
+  .btn-ghost{
+    background: transparent; color: var(--primary); border: 1px dashed var(--primary-light);
+    padding: 10px 16px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%;
+    margin-top: 10px;
+  }
+  .drawer-mask{
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 40;
+  }
+  .drawer-mask.show{ opacity: 1; pointer-events: auto; }
+  .drawer{
+    position: fixed; top: 0; left: 0; bottom: 0; width: 260px; max-width: 80%;
+    background: var(--bg); transform: translateX(-100%); transition: transform .25s;
+    z-index: 50; padding: 24px 16px;
+  }
+  .drawer.show{ transform: translateX(0); }
+  .page{ display: none; padding: 0 16px 24px; }
+  .page.active{ display: block; }
+  .script-card{ background: var(--card); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+  .script-card.done{ opacity: 0.6; }
+  .script-card.done .script-title{ text-decoration: line-through; }
+  .mood-btn{
+    width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--line);
+    background: white; cursor: pointer; font-size: 13px; transition: all .15s;
+  }
+  .mood-btn.active{ background: var(--primary); color: white; border-color: var(--primary); }
+  .empty{
+    text-align: center; padding: 40px 20px; color: var(--text-2); font-size: 13px;
+  }
+  .modal-mask{
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center; z-index: 60;
+    padding: 20px;
+  }
+  .modal-mask.show{ display: flex; }
+  .modal{
+    background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .input{
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 10px;
+    font-family: inherit;
+  }
+  .input:focus{ border-color: var(--primary); }
+  textarea.input{ min-height: 100px; resize: vertical; }
+  .progress-bar{
+    height: 6px; background: var(--primary-light); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill{ height: 100%; background: var(--primary); transition: width .3s; }
+  ::-webkit-scrollbar{ width: 0; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- 顶部栏 -->
+  <header class="flex items-center justify-between px-4 py-3 sticky top-0 z-30" style="background: var(--bg);">
+    <button onclick="toggleDrawer()" class="text-xl" style="color: var(--text);">☰</button>
+    <h1 id="pageTitle" class="text-base font-semibold">每日计划</h1>
+    <button onclick="openAddTask()" class="text-2xl leading-none" style="color: var(--primary);">+</button>
+  </header>
+
+  <!-- 每日计划页 -->
+  <section class="page active" id="page-tasks">
+    <!-- 数据看板 -->
+    <div class="grid grid-cols-4 gap-2 mb-4">
+      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">今日任务</div></div>
+      <div class="stat-card"><div class="stat-num" id="statDone">0</div><div class="stat-label">已完成</div></div>
+      <div class="stat-card"><div class="stat-num" id="statPending">0</div><div class="stat-label">待完成</div></div>
+      <div class="stat-card"><div class="stat-num" id="statRate">0%</div><div class="stat-label">完成率</div></div>
+    </div>
+
+    <!-- 健康提醒条 -->
+    <div id="healthBanner" class="task-card" style="background: linear-gradient(135deg, #E0EAD7 0%, #D4E2C8 100%); border-left: 3px solid var(--accent); display:none;">
+      <div class="flex items-center gap-2 text-sm" style="color: #4A6741;">
+        <span>🌿</span>
+        <span id="healthBannerText">记得照顾自己</span>
+      </div>
+    </div>
+
+    <!-- 个人日常 -->
+    <h3 class="section-title">个人日常</h3>
+    <div id="list-daily"></div>
+    <button class="btn-ghost" onclick="addQuick('daily', '新日常任务')">+ 添加日常任务</button>
+
+    <!-- 健康打卡 -->
+    <h3 class="section-title">健康打卡</h3>
+    <div id="list-health"></div>
+    <button class="btn-ghost" onclick="addQuick('health', '新健康项')">+ 添加健康项</button>
+
+    <!-- 创作任务 -->
+    <h3 class="section-title">创作任务</h3>
+    <div id="list-creative"></div>
+    <button class="btn-ghost" onclick="addQuick('creative', '新创作任务')">+ 添加创作任务</button>
+
+    <!-- 完成率条 -->
+    <div class="mt-6 task-card">
+      <div class="flex justify-between text-xs mb-2" style="color: var(--text-2);">
+        <span>今日完成度</span>
+        <span id="progressText">0/0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </section>
+
+  <!-- 选题灵感 -->
+  <section class="page" id="page-topics">
+    <p class="text-xs mb-3" style="color: var(--text-2);">记录刷到的选题灵感，状态可标记为 待写 / 已用 / 弃用</p>
+    <div id="list-topics"></div>
+    <button class="btn-ghost" onclick="openAddTopic()">+ 添加选题</button>
+  </section>
+
+  <!-- 短视频文案 -->
+  <section class="page" id="page-scripts">
+    <p class="text-xs mb-3" style="color: var(--text-2);">管理短视频文案草稿，标记平台与发布状态</p>
+    <div id="list-scripts"></div>
+    <button class="btn-ghost" onclick="openAddScript()">+ 添加文案</button>
+  </section>
+
+  <!-- 爆款二创 -->
+  <section class="page" id="page-remix">
+    <p class="text-xs mb-3" style="color: var(--text-2);">看到爆款想二创？先存这里</p>
+    <div id="list-remix"></div>
+    <button class="btn-ghost" onclick="openAddRemix()">+ 添加二创选题</button>
+  </section>
+
+  <!-- 内容复盘 -->
+  <section class="page" id="page-review">
+    <p class="text-xs mb-3" style="color: var(--text-2);">记录已发布内容的数据和反思</p>
+    <div id="list-review"></div>
+    <button class="btn-ghost" onclick="openAddReview()">+ 添加复盘</button>
+  </section>
+
+  <!-- 健康打卡（详细） -->
+  <section class="page" id="page-health">
+    <p class="text-xs mb-3" style="color: var(--text-2);">💚 情绪不好的时候，更要好好照顾自己</p>
+
+    <div class="task-card mb-3">
+      <div class="text-sm font-semibold mb-3">今日吃药打卡</div>
+      <div class="grid grid-cols-3 gap-2">
+        <button class="med-btn" data-time="morning">早间<br><span class="text-xs">8:00</span></button>
+        <button class="med-btn" data-time="noon">午间<br><span class="text-xs">13:00</span></button>
+        <button class="med-btn" data-time="evening">晚间<br><span class="text-xs">21:00</span></button>
+      </div>
+    </div>
+
+    <div class="task-card mb-3">
+      <div class="text-sm font-semibold mb-3">今日情绪打分</div>
+      <div class="flex justify-between mb-2" id="moodPicker">
+        <button class="mood-btn" data-mood="1">1</button>
+        <button class="mood-btn" data-mood="2">2</button>
+        <button class="mood-btn" data-mood="3">3</button>
+        <button class="mood-btn" data-mood="4">4</button>
+        <button class="mood-btn" data-mood="5">5</button>
+        <button class="mood-btn" data-mood="6">6</button>
+        <button class="mood-btn" data-mood="7">7</button>
+        <button class="mood-btn" data-mood="8">8</button>
+        <button class="mood-btn" data-mood="9">9</button>
+        <button class="mood-btn" data-mood="10">10</button>
+      </div>
+      <textarea class="input" id="moodNote" placeholder="情绪备注（选填）…今天还好吗？" rows="2"></textarea>
+      <button class="btn-primary w-full" onclick="saveMood()">保存今日情绪</button>
+    </div>
+
+    <div class="task-card">
+      <div class="text-sm font-semibold mb-3">最近 7 天打卡</div>
+      <div id="healthHistory"></div>
+    </div>
+
+    <div class="mt-4 task-card" style="background: #FFF8E8; border-left: 3px solid #D4A847;">
+      <div class="text-xs" style="color: #8B6F2A;">
+        🌱 <b>温馨提示</b><br>
+        情绪低落是真实的，不需要强迫自己"快点好起来"。按时吃药、规律作息、允许自己休息——都是在照顾自己。
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- 抽屉导航 -->
+<div class="drawer-mask" id="drawerMask" onclick="toggleDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="text-xs mb-3" style="color: var(--text-2); letter-spacing: 1px;">YIYI · WORKBENCH</div>
+  <div class="text-lg font-semibold mb-1">依依的工作台</div>
+  <div class="text-xs mb-6" style="color: var(--text-2);" id="todayDate"></div>
+
+  <nav class="space-y-1">
+    <div class="nav-item active" data-page="tasks" onclick="goPage('tasks','每日计划')"><span class="nav-icon">📋</span>每日计划</div>
+    <div class="nav-item" data-page="topics" onclick="goPage('topics','选题灵感')"><span class="nav-icon">💡</span>选题灵感</div>
+    <div class="nav-item" data-page="scripts" onclick="goPage('scripts','短视频文案')"><span class="nav-icon">🎬</span>短视频文案</div>
+    <div class="nav-item" data-page="remix" onclick="goPage('remix','爆款二创')"><span class="nav-icon">🔥</span>爆款二创</div>
+    <div class="nav-item" data-page="review" onclick="goPage('review','内容复盘')"><span class="nav-icon">📊</span>内容复盘</div>
+    <div class="nav-item" data-page="health" onclick="goPage('health','健康打卡')"><span class="nav-icon">🌿</span>健康打卡</div>
+  </nav>
+
+  <div class="absolute bottom-6 left-4 right-4 text-xs" style="color: var(--text-2);">
+    <div>数据保存在本地浏览器</div>
+    <button class="mt-2 underline" onclick="resetData()">重置全部数据</button>
+  </div>
+</aside>
+
+<!-- 新增任务/选题/文案的弹窗 -->
+<div class="modal-mask" id="modal" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ─────────── 数据层 ───────────
+const STORAGE_KEY = 'kexi_workbench_v1';
+
+const defaultData = {
+  tasks: {
+    daily: [],
+    health: [
+      { id: genId(), text: '早间吃药', done: false, time: '早' },
+      { id: genId(), text: '午间吃药', done: false, time: '中' },
+      { id: genId(), text: '晚间吃药', done: false, time: '晚' },
+      { id: genId(), text: '运动 30min', done: false },
+    ],
+    creative: [
+      { id: genId(), text: '趁热打铁三连击', done: false },
+      { id: genId(), text: '短视频文案 ×2', done: false },
+      { id: genId(), text: '运营例行', done: false },
+    ]
+  },
+  topics: [],
+  scripts: [],
+  remix: [],
+  review: [],
+  healthLogs: {}  // { '2026-07-26': { meds: {morning:true,...}, mood: 7, note: '...' } }
+};
+
+function genId(){ return Math.random().toString(36).slice(2,10); }
+function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+let data;
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ try{ data = JSON.parse(raw); return; }catch(e){} }
+  data = JSON.parse(JSON.stringify(defaultData));
+  saveData();
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+// ─────────── 渲染 ───────────
+function renderAll(){
+  renderTasks();
+  renderTopics();
+  renderScripts();
+  renderRemix();
+  renderReview();
+  renderHealthPage();
+  updateHealthBanner();
+}
+
+function renderTasks(){
+  ['daily','health','creative'].forEach(cat => {
+    const el = document.getElementById('list-'+cat);
+    if(!el) return;
+    el.innerHTML = data.tasks[cat].map(t => `
+      <div class="task-card task-item ${t.done?'done':''}" style="display:flex;align-items:center;gap:10px;">
+        <span class="check ${t.done?'done':''}" onclick="toggleTask('${cat}','${t.id}')"></span>
+        <span class="task-text flex-1 text-sm">${escapeHtml(t.text)}</span>
+        <button onclick="deleteTask('${cat}','${t.id}')" style="color:var(--text-2);font-size:18px;line-height:1;background:none;border:none;cursor:pointer;padding:4px;">×</button>
+      </div>
+    `).join('') || `<div class="empty">还没有任务，点下方按钮添加</div>`;
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const all = [...data.tasks.daily, ...data.tasks.health, ...data.tasks.creative];
+  const total = all.length;
+  const done = all.filter(t=>t.done).length;
+  const pending = total - done;
+  const rate = total ? Math.round(done/total*100) : 0;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statRate').textContent = rate+'%';
+  document.getElementById('progressText').textContent = `${done}/${total}`;
+  document.getElementById('progressFill').style.width = rate+'%';
+}
+
+function updateHealthBanner(){
+  const k = todayKey();
+  if(!data.healthLogs[k]){ document.getElementById('healthBanner').style.display='none'; return; }
+  const log = data.healthLogs[k];
+  const medsDone = Object.values(log.meds||{}).filter(Boolean).length;
+  const totalMeds = 3;
+  if(medsDone < totalMeds){
+    document.getElementById('healthBanner').style.display='block';
+    document.getElementById('healthBannerText').textContent = `今日还有 ${totalMeds - medsDone} 次药没吃，记得按时吃药哦`;
+  } else {
+    document.getElementById('healthBanner').style.display='none';
+  }
+}
+
+function renderTopics(){
+  const el = document.getElementById('list-topics');
+  el.innerHTML = data.topics.map(t => `
+    <div class="script-card ${t.status==='已用'?'done':''}">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1">
+          <div class="script-title text-sm font-semibold">${escapeHtml(t.title)}</div>
+          <div class="text-xs mt-1" style="color:var(--text-2);">${escapeHtml(t.tag||'')}</div>
+        </div>
+        <span class="pill ${t.status==='已用'?'green':t.status==='弃用'?'gray':''}">${t.status}</span>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button class="text-xs" style="color:var(--primary);background:none;border:none;cursor:pointer;" onclick="cycleTopicStatus('${t.id}')">切换状态</button>
+        <button class="text-xs" style="color:var(--text-2);background:none;border:none;cursor:pointer;margin-left:auto;" onclick="deleteItem('topics','${t.id}')">删除</button>
+      </div>
+    </div>
+  `).join('') || `<div class="empty">还没有选题，点下方按钮添加</div>`;
+}
+
+function renderScripts(){
+  const el = document.getElementById('list-scripts');
+  el.innerHTML = data.scripts.map(s => `
+    <div class="script-card ${s.status==='已发'?'done':''}" onclick="openScriptDetail('${s.id}')">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1">
+          <div class="script-title text-sm font-semibold">${escapeHtml(s.title)}</div>
+          <div class="text-xs mt-1" style="color:var(--text-2);">${escapeHtml(s.platform||'')} · ${escapeHtml((s.content||'').slice(0,40))}${(s.content||'').length>40?'…':''}</div>
+        </div>
+        <span class="pill ${s.status==='已发'?'green':s.status==='拍摄中'?'':'gray'}">${s.status||'草稿'}</span>
+      </div>
+    </div>
+  `).join('') || `<div class="empty">还没有文案，点下方按钮添加</div>`;
+}
+
+function renderRemix(){
+  const el = document.getElementById('list-remix');
+  el.innerHTML = data.remix.map(r => `
+    <div class="script-card ${r.done?'done':''}">
+      <div class="flex items-center gap-2">
+        <span class="check ${r.done?'done':''}" onclick="toggleRemix('${r.id}')"></span>
+        <div class="flex-1">
+          <div class="text-sm font-semibold">${escapeHtml(r.title)}</div>
+          <div class="text-xs mt-1" style="color:var(--text-2);">${escapeHtml(r.note||'')}</div>
+        </div>
+        <button onclick="deleteItem('remix','${r.id}')" style="color:var(--text-2);font-size:18px;background:none;border:none;cursor:pointer;">×</button>
+      </div>
+    </div>
+  `).join('') || `<div class="empty">还没有二创选题</div>`;
+}
+
+function renderReview(){
+  const el = document.getElementById('list-review');
+  el.innerHTML = data.review.map(r => `
+    <div class="script-card">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <div class="text-sm font-semibold">${escapeHtml(r.title)}</div>
+          <div class="text-xs mt-1" style="color:var(--text-2);">${escapeHtml(r.platform||'')} · ${escapeHtml(r.date||'')}</div>
+          <div class="text-xs mt-2">📈 ${escapeHtml(r.data||'未填')} | 💭 ${escapeHtml(r.note||'')}</div>
+        </div>
+        <button onclick="deleteItem('review','${r.id}')" style="color:var(--text-2);font-size:18px;background:none;border:none;cursor:pointer;">×</button>
+      </div>
+    </div>
+  `).join('') || `<div class="empty">还没有复盘记录</div>`;
+}
+
+function renderHealthPage(){
+  // 吃药按钮高亮
+  const k = todayKey();
+  if(!data.healthLogs[k]) data.healthLogs[k] = { meds:{}, mood:null, note:'' };
+  document.querySelectorAll('.med-btn').forEach(btn => {
+    const t = btn.dataset.time;
+    const done = data.healthLogs[k].meds[t];
+    btn.style.background = done ? 'var(--accent)' : 'white';
+    btn.style.color = done ? 'white' : 'var(--text)';
+    btn.style.borderColor = done ? 'var(--accent)' : 'var(--line)';
+  });
+
+  // 情绪按钮高亮
+  const mood = data.healthLogs[k].mood;
+  document.querySelectorAll('.mood-btn').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.mood) === mood);
+  });
+  document.getElementById('moodNote').value = data.healthLogs[k].note || '';
+
+  // 历史
+  const histEl = document.getElementById('healthHistory');
+  const dates = Object.keys(data.healthLogs).sort().reverse().slice(0,7);
+  if(!dates.length){ histEl.innerHTML = `<div class="empty">还没有打卡记录</div>`; return; }
+  histEl.innerHTML = dates.map(d => {
+    const log = data.healthLogs[d];
+    const medsDone = Object.values(log.meds||{}).filter(Boolean).length;
+    return `<div class="flex justify-between text-xs py-1.5" style="border-bottom:1px solid var(--line);">
+      <span>${d}</span>
+      <span style="color:var(--text-2);">💊${medsDone}/3 · 心情${log.mood||'-'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─────────── 交互 ───────────
+function toggleTask(cat, id){
+  const t = data.tasks[cat].find(x=>x.id===id);
+  if(t) t.done = !t.done;
+  saveData(); renderTasks(); updateHealthBanner();
+}
+function deleteTask(cat, id){
+  if(!confirm('删除这个任务？')) return;
+  data.tasks[cat] = data.tasks[cat].filter(x=>x.id!==id);
+  saveData(); renderTasks();
+}
+function addQuick(cat, defaultText){
+  const text = prompt('任务名称：', defaultText);
+  if(!text) return;
+  data.tasks[cat].push({ id: genId(), text, done:false });
+  saveData(); renderTasks();
+}
+function openAddTask(){
+  const html = `
+    <div class="text-base font-semibold mb-3">新增任务</div>
+    <select class="input" id="newCat">
+      <option value="daily">个人日常</option>
+      <option value="health">健康打卡</option>
+      <option value="creative">创作任务</option>
+    </select>
+    <input class="input" id="newText" placeholder="任务名称">
+    <button class="btn-primary w-full" onclick="submitAddTask()">添加</button>
+  `;
+  showModal(html);
+}
+function submitAddTask(){
+  const cat = document.getElementById('newCat').value;
+  const text = document.getElementById('newText').value.trim();
+  if(!text) return alert('请输入任务名称');
+  data.tasks[cat].push({ id: genId(), text, done:false });
+  saveData(); closeModal(); renderTasks();
+}
+
+function cycleTopicStatus(id){
+  const t = data.topics.find(x=>x.id===id);
+  const order = ['待写','已用','弃用'];
+  t.status = order[(order.indexOf(t.status)+1) % order.length];
+  saveData(); renderTopics();
+}
+function toggleRemix(id){
+  const r = data.remix.find(x=>x.id===id);
+  r.done = !r.done; saveData(); renderRemix();
+}
+function deleteItem(cat, id){
+  if(!confirm('删除？')) return;
+  data[cat] = data[cat].filter(x=>x.id!==id);
+  saveData();
+  if(cat==='topics') renderTopics();
+  if(cat==='scripts') renderScripts();
+  if(cat==='remix') renderRemix();
+  if(cat==='review') renderReview();
+}
+
+function openAddTopic(){
+  showModal(`
+    <div class="text-base font-semibold mb-3">新增选题</div>
+    <input class="input" id="tTitle" placeholder="选题标题">
+    <input class="input" id="tTag" placeholder="标签（可选）">
+    <button class="btn-primary w-full" onclick="submitTopic()">添加</button>
+  `);
+}
+function submitTopic(){
+  const title = document.getElementById('tTitle').value.trim();
+  if(!title) return alert('请输入标题');
+  data.topics.push({ id: genId(), title, tag: document.getElementById('tTag').value.trim(), status:'待写' });
+  saveData(); closeModal(); renderTopics();
+}
+
+function openAddScript(){
+  showModal(`
+    <div class="text-base font-semibold mb-3">新增文案</div>
+    <input class="input" id="sTitle" placeholder="文案标题">
+    <select class="input" id="sPlatform">
+      <option value="抖音">抖音</option>
+      <option value="小红书">小红书</option>
+      <option value="视频号">视频号</option>
+      <option value="其他">其他</option>
+    </select>
+    <textarea class="input" id="sContent" placeholder="文案正文…"></textarea>
+    <button class="btn-primary w-full" onclick="submitScript()">添加</button>
+  `);
+}
+function submitScript(){
+  const title = document.getElementById('sTitle').value.trim();
+  if(!title) return alert('请输入标题');
+  data.scripts.push({
+    id: genId(), title,
+    platform: document.getElementById('sPlatform').value,
+    content: document.getElementById('sContent').value,
+    status:'草稿'
+  });
+  saveData(); closeModal(); renderScripts();
+}
+function openScriptDetail(id){
+  const s = data.scripts.find(x=>x.id===id);
+  const cycle = () => {
+    const order = ['草稿','拍摄中','已发'];
+    s.status = order[(order.indexOf(s.status)+1) % order.length];
+    saveData(); renderScripts();
+  };
+  if(confirm(`文案：「${s.title}」\n平台：${s.platform}\n状态：${s.status}\n\n【确定】切换状态\n【取消】关闭并删除`)){
+    cycle();
+  } else {
+    if(confirm('删除这条文案？')){
+      data.scripts = data.scripts.filter(x=>x.id!==id);
+      saveData(); renderScripts();
+    }
+  }
+}
+
+function openAddRemix(){
+  showModal(`
+    <div class="text-base font-semibold mb-3">新增二创选题</div>
+    <input class="input" id="rTitle" placeholder="原视频标题或链接说明">
+    <textarea class="input" id="rNote" placeholder="二创思路（选填）"></textarea>
+    <button class="btn-primary w-full" onclick="submitRemix()">添加</button>
+  `);
+}
+function submitRemix(){
+  const title = document.getElementById('rTitle').value.trim();
+  if(!title) return alert('请输入标题');
+  data.remix.push({ id: genId(), title, note: document.getElementById('rNote').value.trim(), done:false });
+  saveData(); closeModal(); renderRemix();
+}
+
+function openAddReview(){
+  showModal(`
+    <div class="text-base font-semibold mb-3">新增复盘</div>
+    <input class="input" id="rTitle" placeholder="内容标题">
+    <input class="input" id="rPlatform" placeholder="平台">
+    <input class="input" id="rDate" placeholder="发布日期（如 7-26）">
+    <input class="input" id="rData" placeholder="数据（如 播放1.2w 点赞380）">
+    <textarea class="input" id="rNote" placeholder="复盘反思"></textarea>
+    <button class="btn-primary w-full" onclick="submitReview()">添加</button>
+  `);
+}
+function submitReview(){
+  const title = document.getElementById('rTitle').value.trim();
+  if(!title) return alert('请输入标题');
+  data.review.push({
+    id: genId(), title,
+    platform: document.getElementById('rPlatform').value.trim(),
+    date: document.getElementById('rDate').value.trim(),
+    data: document.getElementById('rData').value.trim(),
+    note: document.getElementById('rNote').value.trim()
+  });
+  saveData(); closeModal(); renderReview();
+}
+
+// 健康打卡交互
+document.addEventListener('click', e => {
+  if(e.target.closest('.med-btn')){
+    const t = e.target.closest('.med-btn').dataset.time;
+    const k = todayKey();
+    if(!data.healthLogs[k]) data.healthLogs[k] = { meds:{}, mood:null, note:'' };
+    data.healthLogs[k].meds[t] = !data.healthLogs[k].meds[t];
+    saveData(); renderHealthPage(); updateHealthBanner();
+  }
+  if(e.target.closest('.mood-btn')){
+    const m = Number(e.target.closest('.mood-btn').dataset.mood);
+    const k = todayKey();
+    if(!data.healthLogs[k]) data.healthLogs[k] = { meds:{}, mood:null, note:'' };
+    data.healthLogs[k].mood = (data.healthLogs[k].mood === m) ? null : m;
+    saveData(); renderHealthPage();
+  }
+});
+function saveMood(){
+  const k = todayKey();
+  if(!data.healthLogs[k]) data.healthLogs[k] = { meds:{}, mood:null, note:'' };
+  data.healthLogs[k].note = document.getElementById('moodNote').value;
+  saveData();
+  alert('已保存今日情绪 ✨');
+  renderHealthPage();
+}
+
+// 导航
+function goPage(page, title){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('pageTitle').textContent = title;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
+  toggleDrawer(false);
+}
+function toggleDrawer(force){
+  const m = document.getElementById('drawerMask');
+  const d = document.getElementById('drawer');
+  const show = force===undefined ? !m.classList.contains('show') : force;
+  m.classList.toggle('show', show);
+  d.classList.toggle('show', show);
+}
+
+function showModal(html){ document.getElementById('modalContent').innerHTML = html; document.getElementById('modal').classList.add('show'); }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+function resetData(){
+  if(!confirm('确定要清空所有数据吗？此操作不可恢复。')) return;
+  localStorage.removeItem(STORAGE_KEY); location.reload();
+}
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// 初始化
+function init(){
+  loadData();
+  document.getElementById('todayDate').textContent = todayKey();
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
