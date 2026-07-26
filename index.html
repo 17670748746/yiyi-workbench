@@ -162,6 +162,16 @@
     color: white; border-color: transparent;
     box-shadow: 0 3px 12px rgba(168,185,154,0.3);
   }
+  .ai-loading{
+    display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(196,135,123,0.2);
+    border-top-color: var(--primary); border-radius: 50%; animation: spin .6s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin{ to{transform:rotate(360deg);} }
+  .ai-result{
+    background: var(--primary-soft); border-radius: 14px; padding: 14px; margin-top: 12px;
+    font-size: 13px; line-height: 1.8; white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+  }
 </style>
 </head>
 <body>
@@ -230,6 +240,9 @@
     <p class="text-xs mb-3" style="color: var(--text-2);">管理短视频文案草稿，标记平台与发布状态</p>
     <div id="list-scripts"></div>
     <button class="btn-ghost" onclick="openAddScript()">+ 添加文案</button>
+    <button class="btn-ghost" onclick="openAIScript()" style="border-style: solid; border-color: var(--primary-light); background: var(--primary-soft); color: var(--primary-dark); font-weight: 600;">
+      🤖 AI 帮我写文案
+    </button>
   </section>
 
   <!-- 爆款二创 -->
@@ -686,6 +699,100 @@ function saveMood(){
   saveData();
   alert('已保存今日情绪 ✨');
   renderHealthPage();
+}
+
+// ─── AI 文案生成 ───
+function getAIKey(){
+  return localStorage.getItem('yiyi_ds_key') || '';
+}
+function setAIKey(k){ localStorage.setItem('yiyi_ds_key', k); }
+
+async function openAIScript(){
+  const hasKey = getAIKey();
+  const keySection = hasKey ? '' : `
+    <div class="ai-result mb-3" style="background:#FFF8F5; font-size:12px; color:var(--primary-dark);">
+      🔑 首次使用需填入 DeepSeek API Key<br>
+      <span style="opacity:0.7;">注册地址：platform.deepseek.com → API Keys</span>
+    </div>
+    <input class="input" id="aiApiKey" placeholder="输入 DeepSeek API Key（sk-...）" value="${hasKey}">
+  `;
+
+  showModal(`
+    <div class="text-base font-semibold mb-3">🤖 AI 写文案</div>
+    ${keySection}
+    <select class="input" id="aiPlatform">
+      <option value="抖音">抖音</option>
+      <option value="小红书">小红书</option>
+      <option value="视频号">视频号</option>
+      <option value="朋友圈">朋友圈</option>
+      <option value="其他">其他</option>
+    </select>
+    <input class="input" id="aiTopic" placeholder="文案主题（如：珂溪Q3季度会、头疗科普、员工故事）">
+    <textarea class="input" id="aiExtra" placeholder="额外要求（选填，如：风格温暖、加emoji、控制200字内）" rows="3"></textarea>
+    <div id="aiResultArea"></div>
+    <button class="btn-primary w-full" id="aiBtn" onclick="runAI()">✨ 生成文案</button>
+  `);
+}
+
+async function runAI(){
+  const btn = document.getElementById('aiBtn');
+  const area = document.getElementById('aiResultArea');
+  const topic = document.getElementById('aiTopic').value.trim();
+  const platform = document.getElementById('aiPlatform').value;
+  const extra = document.getElementById('aiExtra').value.trim();
+  const apiKeyEl = document.getElementById('aiApiKey');
+  const key = apiKeyEl ? apiKeyEl.value.trim() : getAIKey();
+
+  if(!topic){ alert('请输入文案主题'); return; }
+  if(!key){ alert('请输入 DeepSeek API Key'); return; }
+  setAIKey(key);
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="ai-loading"></span>正在生成…';
+  area.innerHTML = '';
+
+  const prompt = '你是珂溪头疗品牌（长沙7家直营店）的主理人依依的AI文案助手。请为「'+platform+'」写一条关于「'+topic+'」的短视频文案。'+(extra?'额外要求：'+extra:'')+'\n\n品牌风格：温暖、真诚、不浮夸。主理人第一人称。靠服务不靠办卡，直营不加盟，顾客第一员工第二股东第三。\n\n输出格式：\n【标题】xxxxx\n【文案正文】xxxxx\n【建议标签】#xxx #xxx #xxx';
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.85,
+        max_tokens: 1500
+      })
+    });
+    const data = await resp.json();
+    if(data.error){ throw new Error(data.error.message); }
+    const text = data.choices[0].message.content;
+    area.innerHTML = `
+      <div class="ai-result">${escapeHtml(text)}</div>
+      <button class="btn-primary w-full mt-3" onclick="saveAIScript()" style="background: var(--accent);">
+        💾 保存到文案库
+      </button>
+    `;
+    window._lastAI = { text, platform };
+  } catch(e){
+    area.innerHTML = '<div class="ai-result" style="color: #C44;">生成失败：'+escapeHtml(e.message)+'</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '✨ 重新生成';
+}
+
+function saveAIScript(){
+  const ai = window._lastAI;
+  if(!ai) return;
+  // 尝试从AI文本中提取标题
+  const lines = ai.text.split('\n');
+  let title = lines.find(l=>l.startsWith('【标题】'))?.replace('【标题】','').trim() || 'AI生成文案';
+  const content = ai.text;
+
+  data.scripts.push({ id: genId(), title, platform: ai.platform, content, status: '草稿' });
+  saveData(); closeModal(); renderScripts();
+  goPage('scripts', '短视频文案');
+  alert('已保存到文案库 ✨');
 }
 
 // 导航
